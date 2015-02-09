@@ -1,0 +1,14 @@
+Various setup details.  Just so I don't forget.  Should turn these into proper instructions at some point.  
+
+sudo pip install pyserial
+
+There's going to be something to do with pycrc or python-crypto here
+download pycrc from https://www.tty1.net/pycrc/index_en.html (sorry about the awful download page)
+extract the archive
+
+-- this might be good enough:  sudo pip install pycrypto --
+
+
+Plug in and turn on the hypnocube, then do ls -la /dev/cu.usb*
+
+
