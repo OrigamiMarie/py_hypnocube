@@ -6,6 +6,8 @@ from command_code import CommandCode
 
 connection = HypnocubeConnection("/dev/cu.usbmodem1421", 40000)
 connection.login()
+connection.hacky_thing()
+
 
 #foo = connection.send_string_get_response(' ')
 #print foo
