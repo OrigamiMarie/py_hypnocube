@@ -1,5 +1,6 @@
 import serial
 import crc16
+import itertools
 from command_code import CommandCode
 
 
@@ -27,6 +28,7 @@ class HypnocubeConnection():
 
     def send_packet_get_packets(self, packet):
         print "Sending packet:\n%s" % packet.pretty_string()
+
         self.serial_connection.write(str(bytearray(packet.packet)))
         result = self.read_all()
         print result
@@ -54,19 +56,62 @@ class HypnocubeConnection():
                       else count + 1
         return count
 
-    def login(self):
-        # This is a long, careful dance.  
-        # Probably the most complicated command, and it's first.  
-        packet1 = Packet.from_parts(True, 0, CommandCode.LOGIN, [])
-        result_packets = self.send_packet_get_packets(packet1)
-        print "number of returned packets:  %d" % len(result_packets)
-        for p in result_packets:
+
+    def hacky_thing(self):
+        first_half = list(itertools.repeat(0x0, 48))
+        second_half = list(itertools.repeat(0x0, 48))
+
+        first_half[0] = 0x11
+        first_half[1] = 0x10
+        
+        first_half[4] = 0x0F
+        first_half[5] = 0x00
+        
+        first_half[18] = 0x0F
+        first_half[19] = 0x00
+
+        first_half[22] = 0x0F
+        first_half[23] = 0xF0
+
+        second_half[24] = 0x00
+        second_half[25] = 0xF0
+
+        second_half[28] = 0x0F
+        second_half[29] = 0x0F
+
+        second_half[42] = 0x0F
+        second_half[43] = 0xF0
+
+        second_half[46] = 0x0F
+        second_half[47] = 0xFF
+
+        packet1 = Packet.from_parts(False, 0, CommandCode.SET_FRAME, first_half)
+        packet2 = Packet.from_parts(True, 1, CommandCode.SET_FRAME, second_half)
+        packet3 = Packet.from_parts(True, 0, CommandCode.FLIP_FRAME, [])
+        result = self.send_packet_get_packets(packet1)
+        self.print_all_packets(result)
+        result = self.send_packet_get_packets(packet2)
+        self.print_all_packets(result)
+        result = self.send_packet_get_packets(packet3)
+        self.print_all_packets(result)
+
+
+    def print_all_packets(self, packets):
+        print "number of packets: %d" % len(packets)
+        for p in packets:
             print p.checksum_valid
             if p.checksum_valid:
                 print p.pretty_string()
             else:
                 print p.pretty_string_from_packet(p.packet)
 
+
+
+    def login(self):
+        dev_challenge = [0xAB, 0xAD, 0xC0, 0xDE]
+        packet1 = Packet.from_parts(True, 0, CommandCode.LOGIN, dev_challenge)
+        result_packets = self.send_packet_get_packets(packet1)
+        self.print_all_packets(result_packets)
 
 
 
@@ -99,7 +144,7 @@ class Packet:
         p.sequence_number = sequence_number
         p.command = command
         p.data = data
-        p.payload_length = len(data) + 1
+        p.payload_length = len(data) + 1 if sequence_number == 0 else len(data)
         p.pack_it()
         return p
 
@@ -123,7 +168,7 @@ class Packet:
         checksum = (packet_list[-2]<<8) + packet_list[-1]
         packet_list = packet_list[:-2]
         # Make sure the checksum is valid.
-        calculated_checksum = crc16.crc16xmodem(str(packet_list), 0xFFFF)
+        calculated_checksum = crc16.crc16xmodem(str(bytearray(packet_list)), 0xFFFF)
         self.checksum_valid = calculated_checksum == checksum
         # Alright, now we're going to work from the beginning for a while.  
         # First byte:
@@ -148,17 +193,18 @@ class Packet:
         # Low 5 bits = packet sequence number
         packet_list.append(self.packet_type + self.sequence_number)
         # Second byte:  payload length (the command is an extra byte)
-        packet_list.append(len(self.data) + 1)
+        packet_list.append(self.payload_length)
         # Third byte:  destination.  
         # We're not going to the trouble of aiming this at a particular device.
         # Whoever's listening on the port gets this packet.
         packet_list.append(Packet.DESTINATION_BROADCAST)
-        # Fourth byte:  command
-        packet_list.append(CommandCode.get_number(self.command))
+        # Fourth byte:  command (but only if this is the first packet in seq)
+        if self.sequence_number == 0:
+            packet_list.append(CommandCode.get_number(self.command))
         # Starting at the fifth byte:  data
         packet_list.extend(self.data)
         # Last two bytes:  checksum for the message up through this point.
-        checksum = crc16.crc16xmodem(str(packet_list), 0xFFFF)
+        checksum = crc16.crc16xmodem(str(bytearray(packet_list)), 0xFFFF)
         # Need to chunk the checksum into two bytes.  
         # High byte:  shift it to the right 8 bits, let the bottom fall off.
         high_byte = checksum>>8
