@@ -2,11 +2,10 @@ import serial
 import crc16
 import itertools
 from command_code import CommandCode
+from cube_model import *
 
 
-class HypnocubeConnection():
-
-    PAYLOAD_MAX_BYTES = 50
+class HypnocubeConnection:
 
 
     def __init__(self, portName, baudrate):
@@ -31,8 +30,6 @@ class HypnocubeConnection():
 
         self.serial_connection.write(str(bytearray(packet.packet)))
         result = self.read_all()
-        print result
-        #print packet.pretty_string_from_packet(bytearray(result))
         packets = []
         while len(result) > 0 and result.find(Packet.SYNC_CHAR) >= 0:
             result = result[result.find(Packet.SYNC_CHAR):]
@@ -47,51 +44,51 @@ class HypnocubeConnection():
                 result = ""
         return packets
 
-    def packet_count(self, byte_count):
-        # This will truncate (not round).  
-        # That means we need to add one more byte, 
-        # except in the case where the fit is just perfect.  
-        count = byte_count / self.PAYLOAD_MAX_BYTES
-        count = count if (byte_count % self.PAYLOAD_MAX_BYTES == 0) \
-                      else count + 1
-        return count
+
+
+    @staticmethod
+    def cube_model_to_byte_list(cube_model):
+        # Unroll the 3d array into a 1d list, in two passes.
+        two_d = [i for l in cube_model.cube for i in l]
+        o = [i for l in two_d for i in l]
+        # Pair off the colors.  Two colors make three bytes this way:
+        # 1r1g 1b2r 2g2b
+        # This is all very elegant as long as there is an even number of colors.
+        # In even-numbered-sided cubes, this is the case.  
+        # I'm guessing the cubes will always have even-numbered sides.
+        # Have fun, future self, with that 5x5x5 cube!  
+        data = [[(o[i].r<<4) + (o[i].g), 
+                 (o[i].b<<4) + (o[i+1].r),
+                 (o[i+1].g<<4) + (o[i+1].b)]
+                 for i in xrange(0, len(o), 2)]
+        # That went and made a list of lists again, so flatten it to return.  
+        return [i for l in data for i in l]
 
 
     def hacky_thing(self):
-        first_half = list(itertools.repeat(0x0, 48))
-        second_half = list(itertools.repeat(0x0, 48))
-
-        first_half[0] = 0x11
-        first_half[1] = 0x10
+        cube = CubeModel()
         
-        first_half[4] = 0x0F
-        first_half[5] = 0x00
-        
-        first_half[18] = 0x0F
-        first_half[19] = 0x00
+        for x in xrange(0, 4):
+            for y in xrange(0, 4):
+                for z in xrange(0, 4):
+                    cube.set_pixel(x, y, z, Color(x*5, y*5, z*5))
 
-        first_half[22] = 0x0F
-        first_half[23] = 0xF0
+        #cube.set_pixel(0, 0, 0, Color(0, 0, 0))
+        #cube.set_pixel(3, 0, 0, Color(15, 0, 0))
+        #cube.set_pixel(0, 3, 0, Color(0, 15, 0))
+        #cube.set_pixel(3, 3, 0, Color(15, 15, 0))
+        #cube.set_pixel(0, 0, 3, Color(0, 0, 15))
+        #cube.set_pixel(3, 0, 3, Color(15, 0, 15))
+        #cube.set_pixel(0, 3, 3, Color(0, 15, 15))
+        #cube.set_pixel(3, 3, 3, Color(15, 15, 15))
 
-        second_half[24] = 0x00
-        second_half[25] = 0xF0
+        data = HypnocubeConnection.cube_model_to_byte_list(cube)
+        packets = Packet.packets_list_from_parts(CommandCode.SET_FRAME, data)
+        for packet in packets:
+            result = self.send_packet_get_packets(packet)
+            self.print_all_packets(result)
 
-        second_half[28] = 0x0F
-        second_half[29] = 0x0F
-
-        second_half[42] = 0x0F
-        second_half[43] = 0xF0
-
-        second_half[46] = 0x0F
-        second_half[47] = 0xFF
-
-        packet1 = Packet.from_parts(False, 0, CommandCode.SET_FRAME, first_half)
-        packet2 = Packet.from_parts(True, 1, CommandCode.SET_FRAME, second_half)
         packet3 = Packet.from_parts(True, 0, CommandCode.FLIP_FRAME, [])
-        result = self.send_packet_get_packets(packet1)
-        self.print_all_packets(result)
-        result = self.send_packet_get_packets(packet2)
-        self.print_all_packets(result)
         result = self.send_packet_get_packets(packet3)
         self.print_all_packets(result)
 
@@ -108,8 +105,9 @@ class HypnocubeConnection():
 
 
     def login(self):
-        dev_challenge = [0xAB, 0xAD, 0xC0, 0xDE]
-        packet1 = Packet.from_parts(True, 0, CommandCode.LOGIN, dev_challenge)
+        device_challenge = [0xAB, 0xAD, 0xC0, 0xDE]
+        packet1 = Packet.packets_list_from_parts(CommandCode.LOGIN, 
+                                                 device_challenge)[0]
         result_packets = self.send_packet_get_packets(packet1)
         self.print_all_packets(result_packets)
 
@@ -118,6 +116,11 @@ class HypnocubeConnection():
 
 class Packet:
 
+    # Sure, technically we could do 49 for the first packet
+    # (first one is command) and 50 for all subsequent packets.  
+    # But this is prettier and will probably change the packet count
+    # approximately never.  
+    DATA_MAX = 48
     PACKET_TYPE_NOT_LAST = 2<<5
     PACKET_TYPE_LAST = 3<<5
     DESTINATION_BROADCAST = 0
@@ -148,10 +151,32 @@ class Packet:
         p.pack_it()
         return p
 
+
+    @staticmethod
+    def packets_list_from_parts(command, data):
+        data_list = Packet.chunk_data(data)
+        packet_count = len(data_list)
+        last_packet = packet_count - 1
+        packet_list = []
+        for i in xrange(0, packet_count):
+            packet_list.append(Packet.from_parts(i==last_packet, 
+                                                 i,
+                                                 command,
+                                                 data_list[i]))
+        return packet_list
+
+
+    @staticmethod
+    def chunk_data(data):
+        return [data [i:i + Packet.DATA_MAX] 
+                for i in xrange(0, len(data), Packet.DATA_MAX)]
+
+
     def pretty_string(self):
         return "Type: %s, Seq: %s, Len: %d, Command: %s, Data:\n%s" % \
                (self.packet_type, self.sequence_number, self.payload_length,
                 self.command, self.pretty_string_from_packet(self.data))
+
 
     def unpack_it(self):
         # The self.packet is either an immutable-length bytearray or 
@@ -251,7 +276,7 @@ class Packet:
                 packet_list.insert(i, Packet.ESC)
                 i = i + 1
             elif packet_list[i] == Packet.ESC:
-                packet_list.insert(i+1)
+                packet_list.insert(i+1, Packet.ESC2)
                 i = i + 1
             i = i + 1
 
