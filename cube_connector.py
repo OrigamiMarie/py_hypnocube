@@ -67,11 +67,13 @@ class HypnocubeConnection:
 
     def hacky_thing(self):
         cube = CubeModel()
-        
+        r = [0, 5, 10, 15]
+        g = [0, 4, 8, 12]
+        b = [0, 2, 7, 15]
         for x in xrange(0, 4):
             for y in xrange(0, 4):
                 for z in xrange(0, 4):
-                    cube.set_pixel(x, y, z, Color(x*5, y*5, z*5))
+                    cube.set_pixel(x, y, z, Color(r[x], g[y], b[z]))
 
         #cube.set_pixel(0, 0, 0, Color(0, 0, 0))
         #cube.set_pixel(3, 0, 0, Color(15, 0, 0))
