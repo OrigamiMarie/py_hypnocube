@@ -1,6 +1,7 @@
 import serial
 import crc16
 import itertools
+import random
 from command_code import CommandCode
 from cube_model import *
 
@@ -10,7 +11,7 @@ class HypnocubeConnection:
 
     def __init__(self, portName, baudrate):
         self.serial_connection = serial.Serial(port=portName, baudrate=baudrate,
-                                               timeout=0.5)
+                                               timeout=0.01)
 
     def close(self):
         self.serial_connection.close()
@@ -26,8 +27,6 @@ class HypnocubeConnection:
         return self.read_all()
 
     def send_packet_get_packets(self, packet):
-        print "Sending packet:\n%s" % packet.pretty_string()
-
         self.serial_connection.write(str(bytearray(packet.packet)))
         result = self.read_all()
         packets = []
@@ -65,34 +64,13 @@ class HypnocubeConnection:
         return [i for l in data for i in l]
 
 
-    def hacky_thing(self):
-        cube = CubeModel()
-        r = [0, 5, 10, 15]
-        g = [0, 4, 8, 12]
-        b = [0, 2, 7, 15]
-        for x in xrange(0, 4):
-            for y in xrange(0, 4):
-                for z in xrange(0, 4):
-                    cube.set_pixel(x, y, z, Color(r[x], g[y], b[z]))
-
-        #cube.set_pixel(0, 0, 0, Color(0, 0, 0))
-        #cube.set_pixel(3, 0, 0, Color(15, 0, 0))
-        #cube.set_pixel(0, 3, 0, Color(0, 15, 0))
-        #cube.set_pixel(3, 3, 0, Color(15, 15, 0))
-        #cube.set_pixel(0, 0, 3, Color(0, 0, 15))
-        #cube.set_pixel(3, 0, 3, Color(15, 0, 15))
-        #cube.set_pixel(0, 3, 3, Color(0, 15, 15))
-        #cube.set_pixel(3, 3, 3, Color(15, 15, 15))
-
+    def send_cube_to_hypnocube(self, cube):
         data = HypnocubeConnection.cube_model_to_byte_list(cube)
         packets = Packet.packets_list_from_parts(CommandCode.SET_FRAME, data)
         for packet in packets:
             result = self.send_packet_get_packets(packet)
-            self.print_all_packets(result)
-
-        packet3 = Packet.from_parts(True, 0, CommandCode.FLIP_FRAME, [])
-        result = self.send_packet_get_packets(packet3)
-        self.print_all_packets(result)
+        flip_packet = Packet.from_parts(True, 0, CommandCode.FLIP_FRAME, [])
+        result = self.send_packet_get_packets(flip_packet)
 
 
     def print_all_packets(self, packets):
@@ -111,7 +89,6 @@ class HypnocubeConnection:
         packet1 = Packet.packets_list_from_parts(CommandCode.LOGIN, 
                                                  device_challenge)[0]
         result_packets = self.send_packet_get_packets(packet1)
-        self.print_all_packets(result_packets)
 
 
 
