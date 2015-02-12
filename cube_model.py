@@ -1,16 +1,22 @@
 
 class CubeModel:
 
-    def __init__(self):
+    def __init__(self, n, duration):
+        self.duration = duration
         black = Color(0, 0, 0)
-        self.n = 4
-        # Initialize the 4x4x4 cube.  
+        self.n = n
+        # Initialize the nXnXn cube.  
         self.cube = [[[black for k in xrange(self.n)] 
                       for j in xrange(self.n)] 
                       for i in xrange(self.n)]
         
+
     def set_pixel(self, x, y, z, color):
         self.cube[x][y][z] = color
+
+
+    def get_pixel(self, x, y, z):
+        return self.cube[x][y][z]
 
 
 class Color:
@@ -28,6 +34,7 @@ class Color:
     def __repr__(self):
         return "R:%x/G:%x/B:%x|" % (self.r, self.g, self.b)
 
+
 class ColorError(Exception):
 
     def __init__(self, color):
@@ -36,4 +43,5 @@ class ColorError(Exception):
     def __str__(self):
         return str(self.color)
 
-
+    def __repr__(self):
+        return str(self.color)
