@@ -11,7 +11,7 @@ class HypnocubeConnection:
 
     def __init__(self, portName, baudrate):
         self.serial_connection = serial.Serial(port=portName, baudrate=baudrate,
-                                               timeout=0.01)
+                                               timeout=0.1)
 
     def close(self):
         self.serial_connection.close()
