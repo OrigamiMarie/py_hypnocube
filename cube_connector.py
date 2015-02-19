@@ -43,7 +43,44 @@ class HypnocubeConnection:
                 result = ""
         return packets
 
+    @staticmethod
+    def packets_to_cube_model(packets, n):
+        # First concatenate all of the data into one list.
+        data = []
+        for packet in packets:
+            data.extend(packet.data)
+        HypnocubeConnection.print_all_packets(packets)
+        print data
+        # Split the data into half-bytes.  
+        # This will make the color conversions oh so much easier.  
+        half_bytes = []
+        for byte in data:
+            half_bytes.append(byte>>4)
+            half_bytes.append(byte - (byte>>4<<4))
+        # Then make those half bytes into a list of colors.  
+        colors = []
+        # Assuming an even number of colors, and thus len(data)%3 = 0
+        for i in xrange(0, len(half_bytes)-2, 3):
+            colors.append(Color(half_bytes[i], 
+                                half_bytes[i+1], 
+                                half_bytes[i+2]))
 
+        # Now make a cube and fill in the colors
+        cube = CubeModel(n, 0)
+        i = 0
+        for x in xrange(0, n):
+            for y in xrange(0, n):
+                for z in xrange(0, n):
+                    cube.set_pixel(x, y, z, colors[i])
+                    i = i + 1
+                    if i == len(data):
+                        # This means we've run out of bytes to put in the cube.
+                        # Normally, this should happen at the very end.
+                        # If not enough bytes came back for the cube, 
+                        # it'll happen early.  
+                        return cube
+        # Just in case there were too many bytes, we also put a return here.
+        return cube
 
     @staticmethod
     def cube_model_to_byte_list(cube_model):
@@ -72,8 +109,13 @@ class HypnocubeConnection:
         flip_packet = Packet.from_parts(True, 0, CommandCode.FLIP_FRAME, [])
         result = self.send_packet_get_packets(flip_packet)
 
+    def get_cube_from_hypnocube(self, n):
+        packet = Packet.from_parts(True, 0, CommandCode.GET_FRAME, [])
+        result_packets = self.send_packet_get_packets(packet)
+        return HypnocubeConnection.packets_to_cube_model(result_packets, n)
 
-    def print_all_packets(self, packets):
+    @staticmethod
+    def print_all_packets(packets):
         print "number of packets: %d" % len(packets)
         for p in packets:
             print p.checksum_valid
@@ -183,10 +225,16 @@ class Packet:
         # Second byte:  payload length
         self.payload_length = packet_list[1]
         # Third byte:  destination.  We don't care.  
-        # Fourth byte:  command.
-        self.command = CommandCode.get_name(packet_list[3])
+        # Fourth byte can be one of two things:
+        #   if this is packet 0 in the sequence, it's the command.  
+        #   if it's any other packet, it's just the start of the data.  
+        start_of_data = 3
+        self.command = CommandCode.NONE
+        if self.sequence_number == 0:
+            start_of_data = 4
+            self.command = CommandCode.get_name(packet_list[3])
         # Fifth byte through current end:  data.
-        self.data = packet_list[4:]
+        self.data = packet_list[start_of_data:]
 
 
     def pack_it(self):

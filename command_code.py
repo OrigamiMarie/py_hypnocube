@@ -4,7 +4,8 @@ class CommandCode():
     # Ah . . . I'm kinda new here, and there's probably a much better way
     # to do this.  But this is the way that's obvious to me right now, 
     # so off we go!
-
+    
+    NONE = "NONE"
     LOGIN = "LOGIN"
     LOGOUT = "LOGOUT"
     RESET = "RESET"
@@ -33,7 +34,8 @@ class CommandCode():
     SCROLL_TEXT = "SCROLL_TEXT"
     LOAD_ANIM = "LOAD_ANIM"
      
-    forward_tuples = [(LOGIN, 0), (LOGOUT, 1), (RESET, 10), (INFO, 11),
+    forward_tuples = [(NONE, -1),
+                      (LOGIN, 0), (LOGOUT, 1), (RESET, 10), (INFO, 11),
                       (VERSION, 12), (OPTIONS, 15), (ERROR, 20),
                       (GET_ERROR, 21), (ACK, 25), (CURRENT_ITEM, 30),
                       (MAX_VIS_IDX, 40), (SELECT_VIS, 41), (MAX_TRAN_IDX, 42),

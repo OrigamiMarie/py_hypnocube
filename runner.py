@@ -12,10 +12,12 @@ from animations.season_lights import *
 connection = HypnocubeConnection("/dev/cu.usbmodem1421", 40000)
 connection.login()
 
-light_show = SeasonLights.get_default_lights()
-#light_show = SeasonLights.get_test_lights()
-animator = CubeAnimator(connection, light_show)
+#light_show = SeasonLights.get_default_lights()
+#animator = CubeAnimator(connection, light_show)
 #animator = CubeAnimator(connection, CubeTraversal(True))
+animator = CubeAnimator(connection, GradualScramble())
 animator.run()
+
+
 connection.close()
 

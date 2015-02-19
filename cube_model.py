@@ -1,3 +1,4 @@
+import pprint
 
 class CubeModel:
 
@@ -18,6 +19,8 @@ class CubeModel:
     def get_pixel(self, x, y, z):
         return self.cube[x][y][z]
 
+    def get_pretty_print(self):
+        return pprint.pformat(self.cube)
 
 class Color:
 
