@@ -5,9 +5,9 @@ class GradualScramble:
 
     def __init__(self):
         self.cube = CubeModel(4, 0.1)
-        r = [0, 5, 10, 15]
-        g = [0, 4, 8, 12]
-        b = [0, 2, 7, 15]
+        r = [0, 1, 4, 15]
+        g = [0, 1, 4, 15]
+        b = [0, 1, 4, 15]
         for x in xrange(0, 4):
             for y in xrange(0, 4):
                 for z in xrange(0, 4):
