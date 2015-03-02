@@ -1,4 +1,5 @@
 This is a python connector for the Hypnocube (www.hypnocube.com).  
+It is not fully-featured.  
 
 I'm not very experienced at Python yet, so I haven't made the dependencies automatic for this package.  
 
