@@ -5,25 +5,27 @@ from cube_model import *
 
 class SeasonLights:
 
-    def __init__(self, light_lists, tick_speed, flip_rate, solid_season_length):
+    def __init__(self, light_lists, tick_speed, flip_rate, solid_season_length, 
+                 edge_length=4):
         self.starting_time = time.time()
         self.tick_speed = tick_speed
         self.flip_rate = flip_rate
         self.solid_season_length = solid_season_length
         self.light_lists = light_lists
+        self.edge_length = edge_length
         max_time = 0
         for light in light_lists[0]:
             max_time = max(max_time, light.loop_duration)
         max_time = max_time / 4
 
-        self.holder_cube = [[[0 for k in xrange(0, 4)]
-                                for j in xrange(0, 4)]
-                                for i in xrange(0, 4)]
+        self.holder_cube = [[[0 for k in xrange(0, edge_length)]
+                                for j in xrange(0, edge_length)]
+                                for i in xrange(0, edge_length)]
         self.holder_list = []
         dark = Color(0, 0, 0)
-        for i in xrange(0, 4):
-            for j in xrange(0, 4):
-                for k in xrange(0, 4):
+        for i in xrange(0, edge_length):
+            for j in xrange(0, edge_length):
+                for k in xrange(0, edge_length):
                     dark_light_loop = random.uniform(0, max_time)
                     light = Light([[dark, dark_light_loop]])
                     light_holder = LightHolder(light)
@@ -94,7 +96,7 @@ class SeasonLights:
 
 
     def next_cube(self):
-        cube = CubeModel(4, self.tick_speed)
+        cube = CubeModel(self.edge_length, self.tick_speed)
         current_list_num = 0
         current_list = self.light_lists[current_list_num]
         while 1==1:
@@ -142,9 +144,9 @@ class SeasonLights:
 
 
     def fill_cube_in_from_holders(self, cube, holders, time):
-        for i in xrange(0, 4):
-            for j in xrange(0, 4):
-                for k in xrange(0, 4):
+        for i in xrange(0, self.edge_length):
+            for j in xrange(0, self.edge_length):
+                for k in xrange(0, self.edge_length):
                     cube.set_pixel(i, j, k, 
                                    holders[i][j][k].get_color_from_time(time))
 

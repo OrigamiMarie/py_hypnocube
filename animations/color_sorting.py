@@ -1,30 +1,46 @@
 import random
-import pprint
 from cube_model import *
 
 class ColorSorting:
 
     def __init__(self, n):
         self.n = n
-        self.sorting_cube = SortingCube(n, 0.1, [0, 1, 2], [True, True, True])
-        
 
     def next_cube(self):
-        return self.sorting_cube.next_cube()
+        while 1==1:
+            sorting_cube = self.make_new_sorting_cube()
+            for color_cube in sorting_cube.next_cube():
+                yield color_cube
+            #yield sorting_cube.next_cube()
+
+    def make_new_sorting_cube(self):
+        directions = [0, 1, 2]
+        random.shuffle(directions)
+        tf = [True, False]
+        orientations = [random.choice(tf), random.choice(tf), random.choice(tf)]
+        possible_intensities = range(0, 15)
+        color_intensities = []
+        for i in xrange(0, self.n):
+            color = random.choice(possible_intensities)
+            possible_intensities.remove(color)
+            color_intensities.append(color)
+        return SortingCube(self.n, 0.1, directions, orientations, 
+                           color_intensities=color_intensities)
 
 
 class SortingCube:
 
-    intensities = [0, 1, 4, 15]
-
     # rgb_directions is some ording of the numbers 0, 1, 2 in a list.  
     # comparison_ups is three booleans in a list.  
-    def __init__(self, n, duration, rgb_directions, comparison_ups):
+    def __init__(self, n, duration, rgb_directions, comparison_ups, 
+                 color_intensities=[0, 1, 4, 15]):
         self.rgb_directions = rgb_directions
         self.flips = [self.keep_direction if keep else self.flip_direction 
                               for keep in comparison_ups]
         self.n = n
         self.duration = duration
+        self.intensities = color_intensities
+        self.intensities.sort()
         
         # Initialize the nXnXn cube.  
         self.color_slots = [[[[i, j, k] for k in xrange(self.n)]
@@ -78,19 +94,12 @@ class SortingCube:
         slot_list_copy.extend(self.slot_list)
         while 1==1:
             if len(slot_list_copy) == 0:
-                print "we kinda think we're sorted"
-                print "here's the result:\n%s" % pprint.pformat(self.color_slots)
                 break
             c = random.choice(slot_list_copy)
             slot_list_copy.remove(c)
-            print "there are %s slots in the cube copy" % len(slot_list_copy)
             neighbors_sorted = False
             # We want a copy here, not the original, because we'll change it.
             neighbors_list = self.get_neighbor_list_copy(c)
-            if c[0] == 0 and c[1] == 0 and c[2] == 0:
-                print "%s    %s" % (pprint.pformat(c), pprint.pformat(neighbors_list))
-            counter = counter + 1
-            print "neighbors were sorted, starting a random slot %s" % counter
             while not neighbors_sorted:
                 neighbor = random.choice(neighbors_list)
                 neighbors_list.remove(neighbor)
@@ -98,13 +107,28 @@ class SortingCube:
                 # This means new_c is an actual value, so the swap was made.
                 # That means we should start over.  
                 if new_c:
+                    counter = counter + 1
                     yield self.get_cube_model()
+                    neighbors_list = self.get_neighbor_list_copy(new_c)
+                    # The new neighbors list should not include the neighbor 
+                    # that we just swapped with.  
+                    # This is important because we're swapping equals, 
+                    # and that can result in swaps that could just swap right 
+                    # back, which makes useless infinite loops.  
+                    for neighbor in neighbors_list:
+                        if neighbor[0] == c:
+                            neighbors_list.remove(neighbor)
+                            # We found the one neighbor, no need look further.
+                            break
                     c = new_c
-                    neighbors_list = self.get_neighbor_list_copy(c)
                     slot_list_copy = []
                     slot_list_copy.extend(self.slot_list)
                     slot_list_copy.remove(c)
                 neighbors_sorted = (len(neighbors_list) == 0)
+        print "sorted in %s swaps" % counter
+        yield CubeModel(self.n, self.duration)
+        for i in xrange(100):
+            yield self.get_cube_model()
 
 
     # We'll be messing up the list, so make a copy.  
@@ -123,16 +147,11 @@ class SortingCube:
         n_color = self.color_slots[n_location[0]][n_location[1]][n_location[2]]
         index = neighbor[1]
         sign = neighbor[2]
-        if c[1] == 0 and c[2] == 0:
-            print "checking %s against %s" % (pprint.pformat(c), pprint.pformat(neighbor))
-            print "colors:  %s and %s" % (pprint.pformat(c_color), pprint.pformat(n_color))
         # This means the sign of the difference is opposite what we want. 
         # That means we should swap these two colors.
-        if ((n_color[index] - c_color[index]) * sign) < 0:
+        if ((n_color[index] - c_color[index]) * sign) <= 0:
             self.color_slots[n_location[0]][n_location[1]][n_location[2]] = c_color
             self.color_slots[c[0]][c[1]][c[2]] = n_color
-            if c[1] == 0 and c[2] == 0:
-                print "swapped"
             return n_location
 
 
@@ -152,7 +171,7 @@ class SortingCube:
 
 
     def led_color(self, i):
-        return SortingCube.intensities[i]
+        return self.intensities[i]
 
     def flip_direction(self, i):
         return self.n-i-1
