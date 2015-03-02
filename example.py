@@ -1,6 +1,5 @@
 import time
 from cube_connector import HypnocubeConnection
-from command_code import CommandCode
 from cube_animator import CubeAnimator
 from cube_model import Color
 from animations.random_animation import RandomAnimation

@@ -12,7 +12,7 @@ class CubeModel:
         """
         self.duration = duration
         black = Color(0, 0, 0)
-        self.n = n
+        self.n = edge_length
         # Initialize the nXnXn cube.  
         self.cube = [[[black for k in xrange(self.n)] 
                       for j in xrange(self.n)] 
