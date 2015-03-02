@@ -1,6 +1,0 @@
-Various setup details.  Just so I don't forget.  Should figure out how python dependencies work at some point.  
-
-sudo pip install pyserial
-
-sudo pip install crc16
-
