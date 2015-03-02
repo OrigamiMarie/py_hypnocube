@@ -90,7 +90,7 @@ class SeasonLights:
                               spring_flower_light, spring_flower_light],
                              [summer_light],
                              [autumn_light]
-                            ], 0.05, 1, 10)
+                            ], 0.05, 0.25, 10)
 
 
     def next_cube(self):
