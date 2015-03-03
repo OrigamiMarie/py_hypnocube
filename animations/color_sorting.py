@@ -11,7 +11,7 @@ class ColorSorting:
             sorting_cube = self.make_new_sorting_cube()
             for color_cube in sorting_cube.next_cube():
                 yield color_cube
-            #yield sorting_cube.next_cube()
+
 
     def make_new_sorting_cube(self):
         directions = [0, 1, 2]
