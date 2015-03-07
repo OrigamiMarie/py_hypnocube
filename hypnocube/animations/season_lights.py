@@ -1,7 +1,7 @@
 import random
 import time
 import math
-from cube_model import *
+from hypnocube.cube_model import *
 
 class SeasonLights:
 

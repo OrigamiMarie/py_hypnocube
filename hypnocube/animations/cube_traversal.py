@@ -1,5 +1,5 @@
 import copy
-from cube_model import *
+from hypnocube.cube_model import *
 
 class CubeTraversal:
 
