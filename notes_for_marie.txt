@@ -1,0 +1,24 @@
+Just a silly little file of notes to self.  Mostly things that are probably really obvious to anybody with experience in python and publishing packages.  
+
+
+Various useful Python package publishing info here:  https://packaging.python.org/en/latest/distributing.html
+
+
+Best way to check out a python package
+(make sure pip is install)
+(make sure virtualenv is installed by doing pip install virtualenv (possibly with sudo))
+make a directory
+virtualenv <DIR>
+source <DIR>/bin/activate
+git clone <package>
+cd <package_directory>
+pip install -e .
+
+
+
+Pushing the package to pypi
+python setup.py bdist_wheel
+(make sure the ~/.pypirc file that is on the packaging.python.org page exists)
+twine upload dist/*
+
+
