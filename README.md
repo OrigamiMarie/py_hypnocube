@@ -2,6 +2,7 @@ This is a python connector for the Hypnocube (www.hypnocube.com).
 It is not fully-featured.  
 
 ----- Getting Started -----
+
 Sorry, I haven't figured out how to do all this with Windows yet.  My instructions apply to OS X and Ubuntu (and probably other flavors of Linux, I haven't tried them out but you can probably blunder along and work it out).  
 
 *  You will need Python version 2 (not 3).  
