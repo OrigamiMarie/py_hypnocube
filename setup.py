@@ -14,7 +14,11 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
+<<<<<<< HEAD
     version='0.1.1',
+=======
+    version='0.1.2',
+>>>>>>> d6d8c1bb20eae65fde2070867e3020f4e107420d
 
     description='Python connector for Hypnocube (www.hypnocube.com)',
 
