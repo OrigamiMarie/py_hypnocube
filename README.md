@@ -1,14 +1,13 @@
 This is a python connector for the Hypnocube (www.hypnocube.com).  
 It is not fully-featured.  
 
-<<<<<<< HEAD
 I'm not very experienced at Python yet, so I haven't made the dependencies automatic for this package.  
 
 To use it, you'll need to do these commands (possibly with sudo):  
 pip install pyserial  
 pip install crc16
 
-=======
+
 ----- Getting Started -----
 
 Sorry, I haven't figured out how to do all this with Windows yet.  My instructions apply to OS X and Ubuntu (and probably other flavors of Linux, I haven't tried them out but you can probably blunder along and work it out).  
@@ -48,14 +47,10 @@ In the directory, do this:
 
 
 ----- For Programmers -----
->>>>>>> d6d8c1bb20eae65fde2070867e3020f4e107420d
 
 The main entry points into this software are cube_connector.HypnocubeConnection and cube_animator.CubeAnimator.  
 These both have in-file help system style documentation.  
 There is an example of connecting to a hypnocube in example.py.  
 
 I'm new to Python, so I welcome (polite) suggestions for improvement in this package.  
-<<<<<<< HEAD
-=======
 
->>>>>>> d6d8c1bb20eae65fde2070867e3020f4e107420d
