@@ -2,7 +2,7 @@ import time
 from cube_connector import HypnocubeConnection
 from cube_animator import CubeAnimator
 from cube_model import Color
-from animations.random_animation import RandomAnimation
+#from animations.random_animation import RandomAnimation
 from animations.cube_traversal import CubeTraversal
 from animations.color_sorting import ColorSorting
 from animations.season_lights import *
