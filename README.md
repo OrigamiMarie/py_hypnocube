@@ -1,12 +1,6 @@
 This is a python connector for the Hypnocube (www.hypnocube.com).  
 It is not fully-featured.  
 
-I'm not very experienced at Python yet, so I haven't made the dependencies automatic for this package.  
-
-To use it, you'll need to do these commands (possibly with sudo):  
-pip install pyserial  
-pip install crc16
-
 
 ----- Getting Started -----
 
